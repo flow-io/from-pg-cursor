@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+'use strict';
+
+// MODULES //
+
+var fs = require( 'fs' ),
+	path = require( 'path' ),
+	pkginfo = require( 'pkginfo' ),
+	parseArgs = require( 'minimist' ),
+	joinStream = require( 'flow-join' ),
+	opts = require( './opts.json' ),
+	createStream = require( './../lib' );
+
+
+// VARIABLES //
+
+var sStream,
+	jStream,
+	sep,
+	args,
+	pkg,
+	fcn;
+
+
+// FUNCTIONS //
+
+/**
+* FUNCTION: onClose()
+*	Callback invoked upon writing a file to `stdout`.
+*
+* @private
+*/
+function onClose() {
+	process.exit( 0 );
+}
+
+/**
+* FUNCTION: onError( evt )
+*	Event listener invoked when a stream instance emits an `error`.
+*
+* @private
+* @param {Object} evt - error event object
+*/
+function onError( evt ) {
+	console.error( evt );
+}
+
+
+// INIT //
+
+process.stdout.on( 'error', process.exit );
+
+
+// PACKAGE INFO //
+
+pkg = pkginfo.read( require.main );
+process.title = pkg.package.name;
+
+
+// ARGUMENTS //
+
+args = parseArgs( process.argv.slice( 2 ), opts );
+
+
+// HELP //
+
+if ( args.help ) {
+	fs.createReadStream( path.join( __dirname, 'usage.txt' ) )
+		.pipe( process.stdout )
+		.on( 'close', onClose );
+    return;
+}
+
+
+// VERSION //
+
+if ( args.version ) {
+	console.log( pkg.package.version );
+	return;
+}
+
+
+// OPTIONS //
+
+opts = {};
+
+// Separator:
+if ( args.sep ) {
+	sep = args.sep;
+} else {
+	sep = '\n';
+}
+
+// highWaterMark:
+if ( args.hasOwnProperty( 'highwatermark' ) ) {
+	opts.highWaterMark = args.highwatermark;
+}
+
+
+// STREAM //
+
+// Create a new source stream:
+sStream = createStream( opts, fcn );
+
+// Create a new join stream:
+jStream = joinStream({
+	'sep': sep
+});
+
+// Add event listeners:
+sStream.on( 'error', onError );
+jStream.on( 'error', onError );
+
+// Create the pipeline:
+sStream
+	.pipe( jStream )
+	.pipe( process.stdout );

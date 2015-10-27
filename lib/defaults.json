@@ -1,0 +1,7 @@
+{
+	"objectMode": true,
+	"encoding": null,
+	"highWaterMark": 1000,
+	"nrows": 10,
+	"interval": 60000
+}

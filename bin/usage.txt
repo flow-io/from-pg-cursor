@@ -1,0 +1,12 @@
+
+Usage: flow-from-pg-cursor [options]
+
+Options:
+
+  -h,   --help                 Print this message.
+  -V,   --version              Print the package version.
+        --sep sep              Separator used to delineate outgoing data.
+                               Default: '\n'.
+  -hwm, --highwatermark hwm    Specify how much data can be buffered into memory
+                               before applying back pressure. Default: 16.
+
